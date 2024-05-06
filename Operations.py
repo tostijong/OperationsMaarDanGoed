@@ -33,6 +33,7 @@ for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
+                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k] ,
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
     for j in F.keys():
@@ -41,6 +42,7 @@ for i in F.keys():
                                     name='z[%s,%s]'%(i,j))
 
 m.update()
+m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C1 - 80% aerobridge
