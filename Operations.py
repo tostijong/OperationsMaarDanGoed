@@ -49,8 +49,8 @@ m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C7 - 80% aerobridge
-C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys() if k<x) for i in F.keys())/
-                      (quicksum((N_a_fi + N_d_fi + N_m_fi) for i in F.keys())) >= 0.8),
+C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for k in G.keys() if k<x) for i in F.keys())/
+                      (quicksum((N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for i in F.keys())) >= 0.8),
                   name='C1')
 
 #C8 - each flight is assigned to exactly 1 gate
