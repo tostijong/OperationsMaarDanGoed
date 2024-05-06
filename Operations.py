@@ -60,7 +60,7 @@ C2 = m.addConstrs(((quicksum(y[i,k] == 1 for k in G.keys())
 #C3 - y is binary (defined in decision variables)
 
 #C4 - z_fi,fj = 1 if fi and fj assigned to same gate
-C4 = m.addConstrs(((quicksum(quicksum(quicksum(for k in G.keys()) for j>i, j in F.keys())for i in F.keys())), name = 'C4'))
+C4 = m.addConstrs(((z[i,j] = quicksum(quicksum(quicksum(for k in G.keys()), for j in F.keys() if j>i) for i in F.keys())), name = 'C4'))
 
 #C5 - safety interval if assigned to same gate
 C5 = m.addConstrs(((a_fi - d_fi + (1-z[i,j])*M >= T)
