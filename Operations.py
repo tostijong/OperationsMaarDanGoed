@@ -76,3 +76,11 @@ C5 = m.addConstrs(((a_fi[i] - d_fi[i] + (1-z[i,j])*M >= T)
 C6 = m.addConstrs((c_fi[i] <= (c_g[k] + (1-y[i,k])*M)
                    for i in F.Keys()
                    for k in G.keys()), name='C6')
+
+#TODO: finish this constraint
+
+# Z_S_la = np.mod()/S
+#
+# # - minimum difference per airline
+# C7 = m.addConstrs(((Z_S_la[la] <= diff)
+#                   for la in L.keys()), name = 'C7')
