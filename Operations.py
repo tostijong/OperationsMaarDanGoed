@@ -48,26 +48,28 @@ m.update()
 m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
-#C1 - 80% aerobridge
+#C7 - 80% aerobridge
 C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys() if k<x) for i in F.keys())/
                       (quicksum((N_a_fi + N_d_fi + N_m_fi) for i in F.keys())) >= 0.8),
                   name='C1')
 
-#C2 - each flight is assigned to exactly 1 gate
-C2 = m.addConstrs(((quicksum(y[i,k] == 1 for k in G.keys())
-                    for i in F.keys()),name='C2'))
+#C8 - each flight is assigned to exactly 1 gate
+C2 = m.addConstrs((quicksum(y[i,k] == 1 for k in G.keys())
+                    for i in F.keys()), name='C2')
 
-#C3 - y is binary (defined in decision variables)
+#C9 - y is binary (defined in decision variables)
 
-#C4 - z_fi,fj = 1 if fi and fj assigned to same gate
-C4 = m.addConstrs(((z[i,j] = quicksum(quicksum(quicksum(for k in G.keys()), for j in F.keys() if j>i) for i in F.keys())), name = 'C4'))
+#C10 - z_fi,fj = 1 if fi and fj assigned to same gate
+C4 = m.addConstrs((z[i,j] == quicksum(quicksum(quicksum((y[i,k]*y[j,k]) for k in G.keys()) for j in F.keys() if j>i) for i in F.keys())
+                  for i in F.keys()
+                  for j in F.keys()), name='C4')
 
-#C5 - safety interval if assigned to same gate
+#C11 - safety interval if assigned to same gate
 C5 = m.addConstrs(((a_fi - d_fi + (1-z[i,j])*M >= T)
                   for i in F.keys()
-                  for j in F.keys() if i<j), name = 'C5')
+                  for j in F.keys() if i<j), name='C5')
 
-#C6 - gate type meets AC type
+#C12 - gate type meets AC type
 C6 = m.addConstrs((c_fi <= (c_g + (1-y[i,k])*M)
                    for i in F.Keys()
-                   for k in G.keys()), name = 'C6')
+                   for k in G.keys()), name='C6')
