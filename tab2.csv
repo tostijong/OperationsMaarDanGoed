@@ -1,0 +1,11 @@
+Gate no.;Gate size;Distance to the baggage hall (unit: m);Distance to the security check points (unit: m);Distance to the transit counter (unit: m);Average distance (unit: m);Contact gate or remote stand
+G001;M;150;245;215;203.3;C
+G002;L;240;270;245;251.7;C
+G003;M;220;260;230;236.7;C
+G004;M;190;235;210;211.7;C
+G005;L;135;170;115;140;C
+G006;S;530;585;440;518.3;C
+G007;M;520;580;425;508.3;C
+G008;L;400;220;230;283.3;C
+G009;L;920;960;975;951.7;R
+G010;L;1000;1100;1050;1050;R
