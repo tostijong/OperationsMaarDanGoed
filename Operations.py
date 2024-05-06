@@ -35,7 +35,7 @@ for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
-                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k] ,
+                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
     for j in F.keys():
@@ -48,9 +48,9 @@ m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C1 - 80% aerobridge
-C1 = m.addConstrs(((((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys()) for i in F.keys())/() >= 0.8)
-                    for j in Delta_minus_jk[(i,k)]) == 1)
-                    for i in C.keys()),name='C1')
+C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys()) for i in F.keys())/
+                      (quicksum((N_a_fi + N_d_fi + N_m_fi) for i in F.keys())) >= 0.8),
+                  name='C1')
 
 #C2 - each flight is assigned to exactly 1 gate
 C2 = m.addConstrs(((quicksum(y[i,k] == 1 for k in G.keys())
@@ -59,8 +59,7 @@ C2 = m.addConstrs(((quicksum(y[i,k] == 1 for k in G.keys())
 #C3 - y is binary (defined in decision variables)
 
 #C4 - z_fi,fj = 1 if fi and fj assigned to same gate
-C4 = m.addConstrs(((quicksum(quicksum(quicksum(for k in G.keys()) for j>i, fj in F.keys())for i in F.keys()))
-                    , name = 'C4'))
+C4 = m.addConstrs(((quicksum(quicksum(quicksum(for k in G.keys()) for j>i, j in F.keys())for i in F.keys())), name = 'C4'))
 
 #C5 - safety interval if assigned to same gate
 C5 = m.addConstrs(((a_fi - d_fi + (1-z[i,j])*M >= T)
