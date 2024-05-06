@@ -1,12 +1,15 @@
 import numpy as np
 import pandas as pd
-from gurobipy import Model,GRB,LinExpr,quicksum
+# from gurobipy import Model,GRB,LinExpr,quicksum
 
 ## Initiate Gurobi model
-m = Model()
+# m = Model()
 tab1 = pd.read_csv('tab1.csv', sep=';')
 tab2 = pd.read_csv('tab2.csv', sep=';')
-
+def convert_time_to_minutes(df):
+    df_copy = df.copy()
+    df_copy= df_copy.apply(lambda x: int(x.split(':')[0]) * 60 + int(x.split(':')[1]))
+    return df_copy
 
 ### symbol definition
 F = tab1['Flight no.'] # flight set
@@ -18,8 +21,8 @@ for airline in L:
 G = tab2['Gate no.']#Gate set
 
 c_g = tab2['Gate size'] #size of gate g_k
-a_fi = tab1['Arr. time'] # arrival time of flight f_i
-d_fi = tab1['Dep. time'] # departure time of flight f_i
+a_fi = convert_time_to_minutes(tab1['Arr. time']) # arrival time of flight f_i
+d_fi = convert_time_to_minutes(tab1['Dep. time']) # departure time of flight f_i
 T = 15 #minimum time interval of two flight which are assigned to the same gate [min]
 S_a_gk = tab2['Distance to the baggage hall (unit: m)'] #distance of arrival passenger walkingfrome gate g_k to baggage hall
 S_d_gk = tab2['Distance to the security check points (unit: m)'] #distance of departure passenger walking from security to gate g_k
