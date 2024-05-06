@@ -28,7 +28,8 @@ N_a_fi = tab1['Number of arr. passengers'] #number of arrival passengers of flig
 N_d_fi = tab1['Number of dep. passengers'] #number of departure passengers of flight f_i
 N_m_fi = tab1['Number of transit passengers'] #number of transit passengers of flight f_i
 
-M = 300
+M = 300 # value of big M
+x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
 
 ## Decision variables
 for i in F.keys():
@@ -48,7 +49,7 @@ m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C1 - 80% aerobridge
-C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys()) for i in F.keys())/
+C1 = m.addConstrs((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys() if k<x) for i in F.keys())/
                       (quicksum((N_a_fi + N_d_fi + N_m_fi) for i in F.keys())) >= 0.8),
                   name='C1')
 
