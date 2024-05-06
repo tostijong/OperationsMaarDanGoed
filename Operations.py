@@ -28,6 +28,8 @@ N_a_fi = tab1['Number of arr. passengers'] #number of arrival passengers of flig
 N_d_fi = tab1['Number of dep. passengers'] #number of departure passengers of flight f_i
 N_m_fi = tab1['Number of transit passengers'] #number of transit passengers of flight f_i
 
+M = 300
+
 ## Decision variables
 for i in F.keys():
     for k in G.keys():
@@ -37,22 +39,22 @@ for i in F.keys():
 for i in F.keys():
     for j in F.keys():
         z[i,j] = m.addVar(lb=0, ub=1,
-                                    vtype=GRB.BINARY,
-                                    name='z[%s,%s]'%(i,j))
+                                vtype=GRB.BINARY,
+                                name='z[%s,%s]'%(i,j))
 
 m.update()
 
 ## Constraints
 #C1 - 80% aerobridge
-C1 = m.addConstrs(((((quicksum(quicksum( for k in K.keys())... for .. in ...)/() >= 0.8)
+C1 = m.addConstrs(((((quicksum(quicksum(y[i,k]*(N_a_fi + N_d_fi + N_m_fi) for k in G.keys()) for i in F.keys())/() >= 0.8)
                     for j in Delta_minus_jk[(i,k)]) == 1)
                     for i in C.keys()),name='C1')
 
 #C2 - each flight is assigned to exactly 1 gate
 C2 = m.addConstrs(((quicksum(y[i,k] == 1 for k in G.keys())
-                    for i in C.keys()),name='C2'))
+                    for i in F.keys()),name='C2'))
 
-#C3 - y is binary (in decision variables)
+#C3 - y is binary (defined in decision variables)
 
 #C4 - z_fi,fj = 1 if fi and fj assigned to same gate
 C4 = m.addConstrs(((quicksum(quicksum(quicksum(for k in G.keys()) for j>i, fj in F.keys())for i in F.keys()))
