@@ -65,14 +65,14 @@ C2 = m.addConstrs((quicksum(y[i,k] == 1 for k in G.keys())
 #C10 - z_fi,fj = 1 if fi and fj assigned to same gate
 C4 = m.addConstrs((z[i,j] == quicksum(quicksum(quicksum((y[i,k]*y[j,k]) for k in G.keys()) for j in F.keys() if j>i) for i in F.keys())
                   for i in F.keys()
-                  for j in F.keys()), name='C4')
+                  for j in F.keys()), name='C4') #zou kunnen dat hier error/fout komt doordat ie loopt over alle j, maar in de quicksum alleen j>i
 
 #C11 - safety interval if assigned to same gate
-C5 = m.addConstrs(((a_fi - d_fi + (1-z[i,j])*M >= T)
+C5 = m.addConstrs(((a_fi[i] - d_fi[i] + (1-z[i,j])*M >= T)
                   for i in F.keys()
                   for j in F.keys() if i<j), name='C5')
 
 #C12 - gate type meets AC type
-C6 = m.addConstrs((c_fi <= (c_g + (1-y[i,k])*M)
+C6 = m.addConstrs((c_fi[i] <= (c_g[k] + (1-y[i,k])*M)
                    for i in F.Keys()
                    for k in G.keys()), name='C6')
