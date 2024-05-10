@@ -26,9 +26,7 @@ print(c_fi2)
 print(c_fi2[0])
 print(c_fi)
 L = tab1['Airline'].drop_duplicates() #set of airlines
-F_L = {} #TODO: change this in constraints
-for airline in L:
-    F_L[airline] = tab1.loc[tab1['Airline'] == airline, 'Flight no.']
+F_L = {airline: tab1.loc[tab1['Airline'] == airline, 'Flight no.'] for airline in L}
 G = tab2['Gate no.']#Gate set
 
 c_g = tab2['Gate size'] #size of gate g_k
@@ -75,10 +73,11 @@ m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C7 - 80% aerobridge
-#TODO: this constraint doesn't work yet, unsure why --> divisor must be a constant + een waarde die een 'gurobipy.LinExpr' is ipv nummer
-denom = quicksum((N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for i in F.keys())
-print(denom)
-C1 = m.addConstrs((((quicksum(quicksum(y[i,k]*(N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for k in G.keys() if k<x) for i in F.keys()))/denom) >= 0.8), name='C1')
+C1 = m.addConstr((((quicksum(y[i,k]*(N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) 
+                              for k in G.keys() if k<x 
+                              for i in F.keys()))
+                              / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()])) 
+                              >= 0.8), name='C1')
 
 #C8 - each flight is assigned to exactly 1 gate
 C2 = m.addConstrs((quicksum(y[i,k] for k in G.keys()) == 1
@@ -103,11 +102,23 @@ C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
 
 # C3,4,5,6 - minimum difference per airline
 #TODO: this constraint doesn't work yet, unsure why --> divisor must be a constant + een waarde die een 'gurobipy.LinExpr ipv nummer
-S = quicksum(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) for k in G.keys()) for i in F.keys())/quicksum(N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys())
+S = quicksum((y[i,k]*
+            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
+            / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])
+            for k in G.keys() 
+            for i in F.keys()))
 
-S_la = quicksum(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) for k in G.keys()) for i in F_L.keys())/quicksum(N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L.keys())
+S_la = {}
+for airline in L:
+    quicksum(y[i,k]*
+                 (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
+                 / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()])
+                 for k in G.keys() 
+                 for i in F_L[airline].keys())
 
+# Dit kan pas in de objective function zelf ingevuld worden
 Z_S_la = np.mod(S_la-S)/S
 
+# Wat is dit?
 C7 = m.addConstrs(((Z_S_la[la] <= Z2)
                   for la in L.keys()), name = 'C7')
