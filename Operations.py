@@ -120,8 +120,14 @@ S = quicksum((y[i,k]*
             for i in F.keys()))
 
 S_la = {}
-for airline in L.keys():
-    S_la[airline] = (quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k])
+for airline in L:
+    S_la[airline] = (quicksum(y[i,k]*
+                              (N_a_fi[i]*
+                               S_a_gk[k]+
+                               N_d_fi[i]*
+                               S_d_gk[k]+
+                               N_m_fi[i]*
+                               S_m_gk[k])
                               for k in G.keys() for i in F_L[airline].keys())
                      /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]))
 
