@@ -96,11 +96,11 @@ C2 = m.addConstrs((quicksum(y[i,k] for k in G.keys()) == 1
 #                                       for k in G.keys())
 #                    for fi in F.keys()
 #                    for fj in F.keys()),name='C4')
-
-C4 = m.addConstrs((z[fi,fj] == quicksum(y[fi,k]*y[fj,k]
+#
+C4 = m.addConstrs((z[i,j] == quicksum(y[i,k]*y[j,k]
                                       for k in G.keys())
-                   for fi in F.keys()
-                   for fj in F.keys()),name='C4')
+                   for i in F.keys()
+                   for j in F.keys() if j>i),name='C4')
 
 #C11 - safety interval if assigned to same gate
 C5 = m.addConstrs(((a_fi[j] - d_fi[i] + (1-z[i,j])*M >= T)
