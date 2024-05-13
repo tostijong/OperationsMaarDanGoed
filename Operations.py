@@ -51,7 +51,7 @@ N_m_fi = tab1['Number of transit passengers'] #number of transit passengers of f
 
 M = 300 # value of big M
 x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
-Z2 = 0.2 # maximum margin of difference per airline
+Z2 = 0.1 # maximum margin of difference per airline
 ## Decision variables
 y = {}
 z = {}
@@ -139,8 +139,11 @@ for airline in L:
 #
 # # # Wat is dit?
 
-C7 = m.addConstrs(((abs_(S_la[la]-S) <= Z2*S)
-                  for la in L), name = 'C7')
+C7a = m.addConstrs((((S_la[la]-S) <= Z2*S)
+                  for la in L), name = 'C7a')
+C7b = m.addConstrs(((-1*(S_la[la]-S) <= Z2*S)
+                  for la in L), name = 'C7b')
+
 
 
 m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
@@ -171,3 +174,4 @@ plt.barh(y=GateAssigned,
          width=DepT_min-ArrT_min,
          left=ArrT_min)
 plt.show()
+
