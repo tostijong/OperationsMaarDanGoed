@@ -86,12 +86,24 @@ C2 = m.addConstrs((quicksum(y[i,k] for k in G.keys()) == 1
 #C9 - y is binary (defined in decision variables)
 
 #C10 - z_fi,fj = 1 if fi and fj assigned to same gate
-C4 = m.addConstrs((z[i,j] == quicksum(quicksum(quicksum((y[i,k]*y[j,k]) for k in G.keys()) for j in F.keys() if j>i) for i in F.keys())
-                  for i in F.keys()
-                  for j in F.keys()), name='C4') #zou kunnen dat hier error/fout komt doordat ie loopt over alle j, maar in de quicksum alleen j>i
+# C4 = m.addConstrs((z[i,j] == quicksum(quicksum(quicksum((y[i,k]*y[j,k]) for k in G.keys()) for j in F.keys() if j>i) for i in F.keys())
+#                   for i in F.keys()
+#                   for j in F.keys() if j>i), name='C4') #zou kunnen dat hier error/fout komt doordat ie loopt over alle j, maar in de quicksum alleen j>i
+
+# C4 = m.addConstrs((z[fi,fj] == quicksum(y[i,k]*y[j,k]
+#                                       for i in F.keys()
+#                                       for j in F.keys() if j > i
+#                                       for k in G.keys())
+#                    for fi in F.keys()
+#                    for fj in F.keys()),name='C4')
+
+C4 = m.addConstrs((z[fi,fj] == quicksum(y[fi,k]*y[fj,k]
+                                      for k in G.keys())
+                   for fi in F.keys()
+                   for fj in F.keys()),name='C4')
 
 #C11 - safety interval if assigned to same gate
-C5 = m.addConstrs(((a_fi[i] - d_fi[i] + (1-z[i,j])*M >= T)
+C5 = m.addConstrs(((a_fi[j] - d_fi[i] + (1-z[i,j])*M >= T)
                   for i in F.keys()
                   for j in F.keys() if i<j), name='C5')
 
@@ -117,8 +129,18 @@ for airline in L:
                  for i in F_L[airline].keys())
 
 # Dit kan pas in de objective function zelf ingevuld worden
-Z_S_la = np.mod(S_la-S)/S
+# Z_S_la = np.abs(S_la-S)/S
 
-# Wat is dit?
-C7 = m.addConstrs(((Z_S_la[la] <= Z2)
-                  for la in L.keys()), name = 'C7')
+# # Wat is dit?
+# C7 = m.addConstrs(((Z_S_la[la] <= Z2)
+#                   for la in L.keys()), name = 'C7')
+
+
+m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+                        for k in G.keys()
+                        for i in F.keys()), GRB.MINIMIZE)
+
+m.update()
+m.optimize()
+# m.computeIIS()
+# m.write('m_test.ilp')
