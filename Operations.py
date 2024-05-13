@@ -113,7 +113,6 @@ C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
                    for k in G.keys()), name='C6')
 
 # C3,4,5,6 - minimum difference per airline
-#TODO: this constraint doesn't work yet, unsure why --> divisor must be a constant + een waarde die een 'gurobipy.LinExpr ipv nummer
 S = quicksum((y[i,k]*
             (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
             / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])
@@ -144,3 +143,4 @@ m.update()
 m.optimize()
 # m.computeIIS()
 # m.write('m_test.ilp')
+m.write('operations.lp')
