@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from gurobipy import Model,GRB,LinExpr,quicksum
+from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 
 ## Initiate Gurobi model
 m = Model()
@@ -138,8 +138,9 @@ for airline in L:
 #     Z_S_la[airline] = np.abs(S_la[airline]-S)/S
 #
 # # # Wat is dit?
-# C7 = m.addConstrs(((Z_S_la[la] <= Z2)
-#                   for la in L.keys()), name = 'C7')
+
+C7 = m.addConstrs(((abs_(S_la[la]-S) <= Z2*S)
+                  for la in L), name = 'C7')
 
 
 m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
@@ -151,3 +152,22 @@ m.optimize()
 # m.computeIIS()
 # m.write('m_test.ilp')
 m.write('operations.lp')
+
+
+cutoff = 10E-6
+GateAssigned = []
+for i in F.keys():
+    for k in G.keys():
+        if y[i,k].X > cutoff:
+            print(f'Flight {F[i]} is assigned to gate {G[k]}')
+            GateAssigned.append(k)
+
+
+import matplotlib.pyplot as plt
+ArrT_min = np.array([a_fi[i] for i in F.keys()])
+DepT_min = np.array([d_fi[i] for i in F.keys()])
+
+plt.barh(y=GateAssigned,
+         width=DepT_min-ArrT_min,
+         left=ArrT_min)
+plt.show()
