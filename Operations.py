@@ -120,17 +120,18 @@ S = quicksum((y[i,k]*
             for i in F.keys()))
 
 S_la = {}
-for airline in L:
-    quicksum(y[i,k]*
-                 (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
-                 / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()])
-                 for k in G.keys() 
-                 for i in F_L[airline].keys())
+for airline in L.keys():
+    S_la[airline] = (quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k])
+                              for k in G.keys() for i in F_L[airline].keys())
+                     /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]))
 
-# Dit kan pas in de objective function zelf ingevuld worden
-# Z_S_la = np.abs(S_la-S)/S
 
-# # Wat is dit?
+# # Dit kan pas in de objective function zelf ingevuld worden
+# Z_S_la ={}
+# for airline in L.keys():
+#     Z_S_la[airline] = np.abs(S_la[airline]-S)/S
+#
+# # # Wat is dit?
 # C7 = m.addConstrs(((Z_S_la[la] <= Z2)
 #                   for la in L.keys()), name = 'C7')
 
