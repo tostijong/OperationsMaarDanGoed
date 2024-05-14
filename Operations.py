@@ -48,9 +48,14 @@ S_m_gk = tab2['Distance to the transit counter (unit: m)'] #distance between gat
 N_a_fi = tab1['Number of arr. passengers'] #number of arrival passengers of flight f_i
 N_d_fi = tab1['Number of dep. passengers'] #number of departure passengers of flight f_i
 N_m_fi = tab1['Number of transit passengers'] #number of transit passengers of flight f_i
-
+k = tab2['Contact gate or remote stand']
 M = 300 # value of big M
-x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
+x = 0 #Number of contact gates
+for type in k:
+    if type == 'C':
+        x += 1
+
+# x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
 Z2 = 0.1 # maximum margin of difference per airline
 ## Decision variables
 y = {}
