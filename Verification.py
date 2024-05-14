@@ -4,8 +4,11 @@ from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 
 ## Initiate Gurobi model
 m = Model()
-tab1 = pd.read_csv('tab1.csv', sep=';')
-tab2 = pd.read_csv('tab2.csv', sep=';')
+# tab1 = pd.read_csv('tab1.csv', sep=';')
+# tab2 = pd.read_csv('tab2.csv', sep=';')
+tab1 = pd.read_excel('verification_scenarios.xlsx', sheet_name='flights - scenario 6')
+tab2 = pd.read_excel('verification_scenarios.xlsx', sheet_name='gates - scenario 6')
+
 def convert_time_to_minutes(df):
     df_copy = df.copy()
     df_copy= df_copy.apply(lambda x: int(x.split(':')[0]) * 60 + int(x.split(':')[1]))
@@ -54,9 +57,7 @@ x = 0 #Number of contact gates
 for type in k:
     if type == 'C':
         x += 1
-
-# x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
-Z2 = 0.2 # maximum margin of difference per airline
+Z2 = 0.1 # maximum margin of difference per airline
 
 ## Decision variables
 y = {}
@@ -167,7 +168,7 @@ m.update()
 m.optimize()
 # m.computeIIS()
 # m.write('m_test.ilp')
-m.write('operations.lp')
+m.write('verification.lp')
 
 
 cutoff = 10E-6
