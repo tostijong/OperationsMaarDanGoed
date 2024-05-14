@@ -146,9 +146,9 @@ C7b = m.addConstrs(((-1*(S_la[la]-S) <= Z2*S)
 
 
 
-m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
-                        for k in G.keys()
-                        for i in F.keys()), GRB.MINIMIZE)
+# m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+#                         for k in G.keys()
+#                         for i in F.keys()), GRB.MINIMIZE)
 
 m.update()
 m.optimize()
@@ -170,8 +170,19 @@ import matplotlib.pyplot as plt
 ArrT_min = np.array([a_fi[i] for i in F.keys()])
 DepT_min = np.array([d_fi[i] for i in F.keys()])
 
-plt.barh(y=GateAssigned,
-         width=DepT_min-ArrT_min,
-         left=ArrT_min)
+bars = plt.barh(y=GateAssigned,
+                width=DepT_min-ArrT_min,
+                left=ArrT_min)
+
+
+for bar, label in zip(bars, F):
+    plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
+             y=bar.get_y() + bar.get_height() / 2,  # y position
+             s=label,  # label text
+             ha='center',  # horizontal alignment
+             va='center',  # vertical alignment
+             color='white')  # text color
+
+
 plt.show()
 
