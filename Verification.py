@@ -6,8 +6,8 @@ from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 m = Model()
 # tab1 = pd.read_csv('tab1.csv', sep=';')
 # tab2 = pd.read_csv('tab2.csv', sep=';')
-tab1 = pd.read_excel('verification_scenarios.xlsx', sheet_name='flights - scenario 1')
-tab2 = pd.read_excel('verification_scenarios.xlsx', sheet_name='gates - scenario 1')
+tab1 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='flights - large')
+tab2 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='gates - large')
 
 def convert_time_to_minutes(df):
     df_copy = df.copy()
@@ -187,8 +187,8 @@ DepT_min = np.array([d_fi[i] for i in F.keys()])
 color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 colors = [color_mapping[val] for val in c_fi2]
 
-background_color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
-background_colors = [background_color_mapping[val] for val in c_g2]
+gate_color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
+gate_colors = [gate_color_mapping[val] for val in c_g2]
 
 
 bars = plt.barh(y=GateAssigned,
@@ -197,14 +197,17 @@ bars = plt.barh(y=GateAssigned,
                 color=colors)
                 #edgecolor=background_colors)
 
-# for i, (color, gate) in enumerate(zip(background_colors, GateAssigned)):
-#     plt.barh(y=gate,
-#             width=max(DepT_min - ArrT_min),  # Set to max width for full background coverage
-#             left=min(ArrT_min),  # Set to min start for full background coverage
-#             color=background_colors,
-#             alpha=0.2,  # High opacity
-#             edgecolor='none')  # No border
-
+# gate colouring by size, comment next 7 lines out if you don't want that
+gate_coloring = True
+if gate_coloring == True:
+    for i, (color, gate) in enumerate(zip(gate_colors, G)):
+        plt.barh(y=gate,
+                width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
+                left=min(ArrT_min),  # Set to min start for full background coverage
+                color=gate_colors,
+                alpha=0.2,  # High opacity
+                edgecolor='none')  # No border
+print(gate_colors)
 for bar, label in zip(bars, F):
     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
              y=bar.get_y() + bar.get_height() / 2,  # y position

@@ -175,32 +175,32 @@ m.write('operations.lp')
 
 cutoff = 10E-6
 GateAssigned = []
-# for i in F.keys():
-#     for k in G.keys():
-        # if y[i,k].X > cutoff:
-            # print(f'Flight {F[i]} is assigned to gate {G[k]}')
-            # GateAssigned.append(k)
+for i in F.keys():
+    for k in G.keys():
+        if y[i,k].X > cutoff:
+            print(f'Flight {F[i]} is assigned to gate {G[k]}')
+            GateAssigned.append(k)
 # for la in L:
 #     print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
 
 
-# import matplotlib.pyplot as plt
-# ArrT_min = np.array([a_fi[i] for i in F.keys()])
-# DepT_min = np.array([d_fi[i] for i in F.keys()])
+import matplotlib.pyplot as plt
+ArrT_min = np.array([a_fi[i] for i in F.keys()])
+DepT_min = np.array([d_fi[i] for i in F.keys()])
 
-# bars = plt.barh(y=GateAssigned,
-#                 width=DepT_min-ArrT_min,
-#                 left=ArrT_min)
-
-
-# for bar, label in zip(bars, F):
-#     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
-#              y=bar.get_y() + bar.get_height() / 2,  # y position
-#              s=label,  # label text
-#              ha='center',  # horizontal alignment
-#              va='center',  # vertical alignment
-#              color='white')  # text color
+bars = plt.barh(y=GateAssigned,
+                width=DepT_min-ArrT_min,
+                left=ArrT_min)
 
 
-# plt.show()
+for bar, label in zip(bars, F):
+    plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
+             y=bar.get_y() + bar.get_height() / 2,  # y position
+             s=label,  # label text
+             ha='center',  # horizontal alignment
+             va='center',  # vertical alignment
+             color='white')  # text color
+
+
+plt.show()
 
