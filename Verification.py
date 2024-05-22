@@ -6,8 +6,8 @@ from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 m = Model()
 # tab1 = pd.read_csv('tab1.csv', sep=';')
 # tab2 = pd.read_csv('tab2.csv', sep=';')
-tab1 = pd.read_excel('verification_scenarios.xlsx', sheet_name='flights - scenario 6')
-tab2 = pd.read_excel('verification_scenarios.xlsx', sheet_name='gates - scenario 6')
+tab1 = pd.read_excel('verification_scenarios.xlsx', sheet_name='flights - scenario 1')
+tab2 = pd.read_excel('verification_scenarios.xlsx', sheet_name='gates - scenario 1')
 
 def convert_time_to_minutes(df):
     df_copy = df.copy()
@@ -25,9 +25,9 @@ for i in c_fi: #erg gebeunde oplossing, maar vgm werkt t wel :) (zelfde geldt vo
         c_fi2.append(2)
     if i == 'L':
         c_fi2.append(3)
-print(c_fi2)
-print(c_fi2[0])
-print(c_fi)
+# print(c_fi2)
+# print(c_fi2[0])
+# print(c_fi)
 L = tab1['Airline'].drop_duplicates() #set of airlines
 F_L = {airline: tab1.loc[tab1['Airline'] == airline, 'Flight no.'] for airline in L}
 G = tab2['Gate no.']#Gate set
@@ -41,7 +41,7 @@ for i in c_g:
         c_g2.append(2)
     if i == 'L':
         c_g2.append(3)
-print(c_g2)
+# print(c_g2)
 a_fi = convert_time_to_minutes(tab1['Arr. time']) # arrival time of flight f_i
 d_fi = convert_time_to_minutes(tab1['Dep. time']) # departure time of flight f_i
 T = 15 #minimum time interval of two flight which are assigned to the same gate [min]
@@ -57,7 +57,7 @@ x = 0 #Number of contact gates
 for type in k:
     if type == 'C':
         x += 1
-Z2 = 0.1 # maximum margin of difference per airline
+Z2 = 0.2 # maximum margin of difference per airline
 
 ## Decision variables
 y = {}
@@ -184,10 +184,26 @@ import matplotlib.pyplot as plt
 ArrT_min = np.array([a_fi[i] for i in F.keys()])
 DepT_min = np.array([d_fi[i] for i in F.keys()])
 
+color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
+colors = [color_mapping[val] for val in c_fi2]
+
+background_color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
+background_colors = [background_color_mapping[val] for val in c_g2]
+
+
 bars = plt.barh(y=GateAssigned,
                 width=DepT_min-ArrT_min,
-                left=ArrT_min)
+                left=ArrT_min,
+                color=colors)
+                #edgecolor=background_colors)
 
+# for i, (color, gate) in enumerate(zip(background_colors, GateAssigned)):
+#     plt.barh(y=gate,
+#             width=max(DepT_min - ArrT_min),  # Set to max width for full background coverage
+#             left=min(ArrT_min),  # Set to min start for full background coverage
+#             color=background_colors,
+#             alpha=0.2,  # High opacity
+#             edgecolor='none')  # No border
 
 for bar, label in zip(bars, F):
     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
