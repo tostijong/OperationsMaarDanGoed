@@ -66,7 +66,7 @@ for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
-                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
+                                # obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
     for j in F.keys():
@@ -75,7 +75,7 @@ for i in F.keys():
                                 name='z[%s,%s]'%(i,j))
 
 m.update()
-m.setObjective(m.getObjective(), GRB.MINIMIZE)
+# m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C7 - 80% aerobridge
@@ -119,50 +119,53 @@ C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
                    for k in G.keys()), name='C6')
 
 # C3,4,5,6 - minimum difference per airline
-S = quicksum((y[i,k]*
-            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
-            / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])
-            for k in G.keys() 
-            for i in F.keys()))
+# S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
+# S_val = m.addConstr(S == quicksum((y[i,k]*
+#             (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
+#             / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])
+#             for k in G.keys() 
+#             for i in F.keys())))
 
-S_la = {}
-for airline in L:
-    S_la[airline] = (quicksum(y[i,k]*
-                              (N_a_fi[i]*
-                               S_a_gk[k]+
-                               N_d_fi[i]*
-                               S_d_gk[k]+
-                               N_m_fi[i]*
-                               S_m_gk[k])
-                              for k in G.keys() for i in F_L[airline].keys())
-                     /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]))
-
-
-# # Dit kan pas in de objective function zelf ingevuld worden
-# Z_S_la ={}
-# for airline in L.keys():
-#     Z_S_la[airline] = np.abs(S_la[airline]-S)/S
-
-C7a = m.addConstrs((((S_la[la]-S) <= Z2*S)
-                for la in L), name = 'C7a')
-
-C7b = m.addConstrs((((-1*(S_la[la]-S)) <= Z2*S)
-                for la in L), name = 'C7b')
-
-# # Dit kan pas in de objective function zelf ingevuld worden
-# Z_S_la ={}
+# S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,name=f'S_la[{la}]') for la in L}
+# S_la_val = {}
 # for airline in L:
-#     Z_S_la[airline] = abs_(S_la[airline]-S) /S
-#
-# # # Wat is dit?
+#     S_la_val[airline] = m.addConstr(S_la[airline] == quicksum(y[i,k]*
+#                               (N_a_fi[i]*
+#                                S_a_gk[k]+
+#                                N_d_fi[i]*
+#                                S_d_gk[k]+
+#                                N_m_fi[i]*
+#                                S_m_gk[k])
+#                               for k in G.keys() for i in F_L[airline].keys())
+#                      /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]), name=f'S_la_val[{airline}]')
+
+
+# # M = 1E6
+# B = {la: m.addVar(lb=0, ub=1,
+#                     vtype=GRB.BINARY,
+#                     name=f'B[{la}]')
+#                     for la in L}
+
+# Z_S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,
+#                             name=f'Z_S_la[{la}]')
+#                             for la in L}
+
+# C0_max1 = m.addConstrs((Z_S_la[la]*S >= (S_la[la] - S) for la in L),name='C0_max1')
+# C0_max2 = m.addConstrs((Z_S_la[la]*S >= -1*(S_la[la] - S) for la in L),name='C0_max2')
+
+# C0_min1 = m.addConstrs((Z_S_la[la]*S <= (S_la[la] - S) + M*B[la] for la in L),name='C0_min1')
+# C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la in L),name='C0_min2')
+
+
 # C7 = m.addConstrs(((Z_S_la[la] <= Z2)
-#                   for la in L.keys()), name = 'C7')
+#                   for la in L), name = 'C7')
 
 
-# m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
-#                         for k in G.keys()
-#                         for i in F.keys()), GRB.MINIMIZE)
+m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+                        for k in G.keys()
+                        for i in F.keys()), GRB.MINIMIZE)
 
+m.setParam('NonConvex', 2)
 m.update()
 m.optimize()
 # m.computeIIS()
@@ -172,30 +175,32 @@ m.write('operations.lp')
 
 cutoff = 10E-6
 GateAssigned = []
-for i in F.keys():
-    for k in G.keys():
-        if y[i,k].X > cutoff:
-            print(f'Flight {F[i]} is assigned to gate {G[k]}')
-            GateAssigned.append(k)
+# for i in F.keys():
+#     for k in G.keys():
+        # if y[i,k].X > cutoff:
+            # print(f'Flight {F[i]} is assigned to gate {G[k]}')
+            # GateAssigned.append(k)
+# for la in L:
+#     print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
 
 
-import matplotlib.pyplot as plt
-ArrT_min = np.array([a_fi[i] for i in F.keys()])
-DepT_min = np.array([d_fi[i] for i in F.keys()])
+# import matplotlib.pyplot as plt
+# ArrT_min = np.array([a_fi[i] for i in F.keys()])
+# DepT_min = np.array([d_fi[i] for i in F.keys()])
 
-bars = plt.barh(y=GateAssigned,
-                width=DepT_min-ArrT_min,
-                left=ArrT_min)
-
-
-for bar, label in zip(bars, F):
-    plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
-             y=bar.get_y() + bar.get_height() / 2,  # y position
-             s=label,  # label text
-             ha='center',  # horizontal alignment
-             va='center',  # vertical alignment
-             color='white')  # text color
+# bars = plt.barh(y=GateAssigned,
+#                 width=DepT_min-ArrT_min,
+#                 left=ArrT_min)
 
 
-plt.show()
+# for bar, label in zip(bars, F):
+#     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
+#              y=bar.get_y() + bar.get_height() / 2,  # y position
+#              s=label,  # label text
+#              ha='center',  # horizontal alignment
+#              va='center',  # vertical alignment
+#              color='white')  # text color
+
+
+# plt.show()
 
