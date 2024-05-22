@@ -6,8 +6,8 @@ from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 m = Model()
 # tab1 = pd.read_csv('tab1.csv', sep=';')
 # tab2 = pd.read_csv('tab2.csv', sep=';')
-tab1 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='flights - large')
-tab2 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='gates - large')
+tab1 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='flights - scenario 5')
+tab2 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='gates - scenario 5')
 
 def convert_time_to_minutes(df):
     df_copy = df.copy()
@@ -216,6 +216,6 @@ for bar, label in zip(bars, F):
              va='center',  # vertical alignment
              color='white')  # text color
 
-
+# plt.savefig('verification_scenario4')
 plt.show()
 
