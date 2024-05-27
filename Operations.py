@@ -161,9 +161,9 @@ C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la i
 #                   for la in L), name = 'C7')
 
 
-# m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
-#                         for k in G.keys()
-#                         for i in F.keys()), GRB.MINIMIZE)
+m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+                        for k in G.keys()
+                        for i in F.keys()), GRB.MINIMIZE)
 
 
 # ZSla_max = m.addVar(vtype=GRB.CONTINOUS,
@@ -172,9 +172,9 @@ C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la i
 # ZSLa_max_val = m.addConstr(ZSla_max == max_(Z_S_la), name='ZSLa_max_val')
 
 
-Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
-Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
-m.setObjective(Z2, GRB.MINIMIZE)
+# Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
+# Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
+# m.setObjective(Z2, GRB.MINIMIZE)
 
 m.setParam('NonConvex', 2)
 m.update()
@@ -191,7 +191,9 @@ for i in F.keys():
         if y[i,k].X > cutoff:
             print(f'Flight {F[i]} is assigned to gate {G[k]}')
             GateAssigned.append(k)
-            print(f'S should be equal to {sum([N_a_fi[i]*S_a_gk[g] + N_d_fi[i]*S_d_gk[g] + N_m_fi[i]*S_m_gk[g] for i in L.keys() for g in G.keys()]) / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])}')
+print(f'S is equal to {S.X}')
+for la in L:
+    print(f'S_{la} is equal to {S_la[la].X}')
 # print(sum([y[i,k].X*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
 #                         for k in G.keys()
 #                         for i in F.keys()]))
@@ -200,6 +202,10 @@ for i in F.keys():
 #     print(la,': ',S_la[la])
 #     # print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
 
+print(quicksum((y[i,k].X*
+            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
+            for k in G.keys() 
+            for i in F.keys())),sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()]))
 
 # import matplotlib.pyplot as plt
 # ArrT_min = np.array([a_fi[i] for i in F.keys()])
