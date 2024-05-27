@@ -185,6 +185,9 @@ import matplotlib.pyplot as plt
 ArrT_min = np.array([a_fi[i] for i in F.keys()])
 DepT_min = np.array([d_fi[i] for i in F.keys()])
 
+ArrT_timestamp = str(ArrT_min % 60) +str(ArrT_min - ArrT_min % 60)
+DepT_timestamp = str(DepT_min % 60) +str(DepT_min - DepT_min % 60)
+
 color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 colors = [color_mapping[val] for val in c_fi2]
 
