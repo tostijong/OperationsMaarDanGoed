@@ -182,35 +182,47 @@ for i in F.keys():
 
 
 import matplotlib.pyplot as plt
+xticks_stepsize = 30 #min
 ArrT_min = np.array([a_fi[i] for i in F.keys()])
 DepT_min = np.array([d_fi[i] for i in F.keys()])
 
-ArrT_timestamp = str(ArrT_min % 60) +str(ArrT_min - ArrT_min % 60)
-DepT_timestamp = str(DepT_min % 60) +str(DepT_min - DepT_min % 60)
+def timestamp(time_min):
+    hr = time_min // 60
+    min = time_min - hr*60
+
+    hr_str = str(hr)
+    min_str = str(min)
+    if len(hr_str) == 1:
+        hr_str = '0' + hr_str
+
+    if len(min_str) == 1:
+        min_str = '0' + min_str
+
+    return hr_str+':'+min_str
+
+Tticks = [t for t in range(int(np.floor(min(ArrT_min)/xticks_stepsize)*xticks_stepsize),
+               int((np.ceil(max(DepT_min)/xticks_stepsize)+1)*xticks_stepsize),xticks_stepsize)]
+Tticks_str = [timestamp(t) for t in Tticks]
 
 color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 colors = [color_mapping[val] for val in c_fi2]
 
+bars = plt.barh(y=GateAssigned,
+                width=DepT_min-ArrT_min,
+                left=ArrT_min)
 gate_color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 gate_colors = [gate_color_mapping[val] for val in c_g2]
 
 # gate colouring by size, change color=color to color='white' if you don't want it
 for i, (color, gate) in enumerate(zip(gate_colors, G)):
     plt.barh(y=gate,
-            width=(max(DepT_min) - min(ArrT_min))/60,  # Set to max width for full background coverage
-            left=min(ArrT_min)/60,  # Set to min start for full background coverage
-            color=color,
-            alpha=0.2,  # High opacity
-            edgecolor='none')  # No border
-print(gate_colors)
-
-bars = plt.barh(y=GateAssigned,
-                width=(DepT_min-ArrT_min)/60,
-                left=(ArrT_min)/60,
-                color=colors,
-                alpha=1.0)
-                #edgecolor=background_colors)
-
+            #  width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
+            #  left=min(ArrT_min),  # Set to min start for full background coverage
+             width = Tticks[-1] - Tticks[0],
+             left=Tticks[0],
+             color=color,
+             alpha=0.2,  # High opacity
+             edgecolor='none')  # No border
 
 for bar, label in zip(bars, F):
     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
@@ -219,6 +231,15 @@ for bar, label in zip(bars, F):
              ha='center',  # horizontal alignment
              va='center',  # vertical alignment
              color='white')  # text color
+
+bars = plt.barh(y=GateAssigned,
+                width=DepT_min-ArrT_min,
+                left=ArrT_min,
+                color = colors,
+                alpha=1.0)
+
+plt.xticks(Tticks,Tticks_str)
+plt.xlim((Tticks[0],Tticks[-1]))
 
 if save == True:
     plt.savefig('verification_scenario4')

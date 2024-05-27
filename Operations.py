@@ -203,12 +203,29 @@ print(quicksum((y[i,k].X*
             for k in G.keys() 
             for i in F.keys())),'/',sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F.keys()]), '=' ,S)
 
+
 import matplotlib.pyplot as plt
+xticks_stepsize = 30 #min
 ArrT_min = np.array([a_fi[i] for i in F.keys()])
 DepT_min = np.array([d_fi[i] for i in F.keys()])
-import matplotlib.pyplot as plt
-ArrT_min = np.array([a_fi[i] for i in F.keys()])
-DepT_min = np.array([d_fi[i] for i in F.keys()])
+
+def timestamp(time_min):
+    hr = time_min // 60
+    min = time_min - hr*60
+
+    hr_str = str(hr)
+    min_str = str(min)
+    if len(hr_str) == 1:
+        hr_str = '0' + hr_str
+
+    if len(min_str) == 1:
+        min_str = '0' + min_str
+
+    return hr_str+':'+min_str
+
+Tticks = [t for t in range(int(np.floor(min(ArrT_min)/xticks_stepsize)*xticks_stepsize),
+               int((np.ceil(max(DepT_min)/xticks_stepsize)+1)*xticks_stepsize),xticks_stepsize)]
+Tticks_str = [timestamp(t) for t in Tticks]
 
 color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 colors = [color_mapping[val] for val in c_fi2]
@@ -222,8 +239,10 @@ gate_colors = [gate_color_mapping[val] for val in c_g2]
 # gate colouring by size, change color=color to color='white' if you don't want it
 for i, (color, gate) in enumerate(zip(gate_colors, G)):
     plt.barh(y=gate,
-             width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
-             left=min(ArrT_min),  # Set to min start for full background coverage
+            #  width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
+            #  left=min(ArrT_min),  # Set to min start for full background coverage
+             width = Tticks[-1] - Tticks[0],
+             left=Tticks[0],
              color=color,
              alpha=0.2,  # High opacity
              edgecolor='none')  # No border
@@ -241,6 +260,9 @@ bars = plt.barh(y=GateAssigned,
                 left=ArrT_min,
                 color = colors,
                 alpha=1.0)
+
+plt.xticks(Tticks,Tticks_str)
+plt.xlim((Tticks[0],Tticks[-1]))
 
 
 plt.show()
