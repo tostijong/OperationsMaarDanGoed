@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from gurobipy import Model,GRB,LinExpr,quicksum,abs_
+from gurobipy import Model,GRB,LinExpr,quicksum,max_
 
 ## Initiate Gurobi model
 m = Model()
@@ -119,51 +119,62 @@ C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
                    for k in G.keys()), name='C6')
 
 # C3,4,5,6 - minimum difference per airline
-# S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
-# S_val = m.addConstr(S == quicksum((y[i,k]*
-#             (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
-#             / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])
-#             for k in G.keys() 
-#             for i in F.keys())))
+S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
+S_val = m.addConstr(S == quicksum((y[i,k]*
+            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
+            for k in G.keys() 
+            for i in F.keys())) / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()]))
 
-# S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,name=f'S_la[{la}]') for la in L}
-# S_la_val = {}
-# for airline in L:
-#     S_la_val[airline] = m.addConstr(S_la[airline] == quicksum(y[i,k]*
-#                               (N_a_fi[i]*
-#                                S_a_gk[k]+
-#                                N_d_fi[i]*
-#                                S_d_gk[k]+
-#                                N_m_fi[i]*
-#                                S_m_gk[k])
-#                               for k in G.keys() for i in F_L[airline].keys())
-#                      /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]), name=f'S_la_val[{airline}]')
+S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,name=f'S_la[{la}]') for la in L}
+S_la_val = {}
+for airline in L:
+    S_la_val[airline] = m.addConstr(S_la[airline] == quicksum(y[i,k]*
+                              (N_a_fi[i]*
+                               S_a_gk[k]+
+                               N_d_fi[i]*
+                               S_d_gk[k]+
+                               N_m_fi[i]*
+                               S_m_gk[k])
+                              for k in G.keys() for i in F_L[airline].keys())
+                     /sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F_L[airline].keys()]), name=f'S_la_val[{airline}]')
 
 
-# # M = 1E6
-# B = {la: m.addVar(lb=0, ub=1,
-#                     vtype=GRB.BINARY,
-#                     name=f'B[{la}]')
-#                     for la in L}
+# M = 1E6
+B = {la: m.addVar(lb=0, ub=1,
+                    vtype=GRB.BINARY,
+                    name=f'B[{la}]')
+                    for la in L}
 
-# Z_S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,
-#                             name=f'Z_S_la[{la}]')
-#                             for la in L}
+Z_S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,
+                            name=f'Z_S_la[{la}]')
+                            for la in L}
 
-# C0_max1 = m.addConstrs((Z_S_la[la]*S >= (S_la[la] - S) for la in L),name='C0_max1')
-# C0_max2 = m.addConstrs((Z_S_la[la]*S >= -1*(S_la[la] - S) for la in L),name='C0_max2')
+C0_max1 = m.addConstrs((Z_S_la[la]*S >= (S_la[la] - S) for la in L),name='C0_max1')
+C0_max2 = m.addConstrs((Z_S_la[la]*S >= -1*(S_la[la] - S) for la in L),name='C0_max2')
 
-# C0_min1 = m.addConstrs((Z_S_la[la]*S <= (S_la[la] - S) + M*B[la] for la in L),name='C0_min1')
-# C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la in L),name='C0_min2')
+C0_min1 = m.addConstrs((Z_S_la[la]*S <= (S_la[la] - S) + M*B[la] for la in L),name='C0_min1')
+C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la in L),name='C0_min2')
+
 
 
 # C7 = m.addConstrs(((Z_S_la[la] <= Z2)
 #                   for la in L), name = 'C7')
 
 
-m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
-                        for k in G.keys()
-                        for i in F.keys()), GRB.MINIMIZE)
+# m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+#                         for k in G.keys()
+#                         for i in F.keys()), GRB.MINIMIZE)
+
+
+# ZSla_max = m.addVar(vtype=GRB.CONTINOUS,
+#                     name='ZSla_max')
+
+# ZSLa_max_val = m.addConstr(ZSla_max == max_(Z_S_la), name='ZSLa_max_val')
+
+
+Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
+Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
+m.setObjective(Z2, GRB.MINIMIZE)
 
 m.setParam('NonConvex', 2)
 m.update()
@@ -180,27 +191,33 @@ for i in F.keys():
         if y[i,k].X > cutoff:
             print(f'Flight {F[i]} is assigned to gate {G[k]}')
             GateAssigned.append(k)
+            print(f'S should be equal to {sum([N_a_fi[i]*S_a_gk[g] + N_d_fi[i]*S_d_gk[g] + N_m_fi[i]*S_m_gk[g] for i in L.keys() for g in G.keys()]) / sum([N_a_fi[i]*N_d_fi[i]*N_m_fi[i] for i in F.keys()])}')
+# print(sum([y[i,k].X*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+#                         for k in G.keys()
+#                         for i in F.keys()]))
+# print(S)
 # for la in L:
-#     print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
+#     print(la,': ',S_la[la])
+#     # print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
 
 
-import matplotlib.pyplot as plt
-ArrT_min = np.array([a_fi[i] for i in F.keys()])
-DepT_min = np.array([d_fi[i] for i in F.keys()])
+# import matplotlib.pyplot as plt
+# ArrT_min = np.array([a_fi[i] for i in F.keys()])
+# DepT_min = np.array([d_fi[i] for i in F.keys()])
 
-bars = plt.barh(y=GateAssigned,
-                width=DepT_min-ArrT_min,
-                left=ArrT_min)
-
-
-for bar, label in zip(bars, F):
-    plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
-             y=bar.get_y() + bar.get_height() / 2,  # y position
-             s=label,  # label text
-             ha='center',  # horizontal alignment
-             va='center',  # vertical alignment
-             color='white')  # text color
+# bars = plt.barh(y=GateAssigned,
+#                 width=DepT_min-ArrT_min,
+#                 left=ArrT_min)
 
 
-plt.show()
+# for bar, label in zip(bars, F):
+#     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
+#              y=bar.get_y() + bar.get_height() / 2,  # y position
+#              s=label,  # label text
+#              ha='center',  # horizontal alignment
+#              va='center',  # vertical alignment
+#              color='white')  # text color
+
+
+# plt.show()
 
