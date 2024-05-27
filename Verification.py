@@ -6,9 +6,10 @@ from gurobipy import Model,GRB,LinExpr,quicksum,abs_
 m = Model()
 # tab1 = pd.read_csv('tab1.csv', sep=';')
 # tab2 = pd.read_csv('tab2.csv', sep=';')
-tab1 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='flights - large')
-tab2 = pd.read_excel('verification_large_scenario.xlsx', sheet_name='gates - large')
-
+tab1 = pd.read_excel('verification_scenarios.xlsx', sheet_name='flights - scenario 1')
+tab2 = pd.read_excel('verification_scenarios.xlsx', sheet_name='gates - scenario 1')
+#save plot
+save = False
 def convert_time_to_minutes(df):
     df_copy = df.copy()
     df_copy= df_copy.apply(lambda x: int(x.split(':')[0]) * 60 + int(x.split(':')[1]))
@@ -190,24 +191,24 @@ colors = [color_mapping[val] for val in c_fi2]
 gate_color_mapping = {1: 'green', 2: 'orange', 3: 'red'}
 gate_colors = [gate_color_mapping[val] for val in c_g2]
 
+# gate colouring by size, change color=color to color='white' if you don't want it
+for i, (color, gate) in enumerate(zip(gate_colors, G)):
+    plt.barh(y=gate,
+            width=(max(DepT_min) - min(ArrT_min))/60,  # Set to max width for full background coverage
+            left=min(ArrT_min)/60,  # Set to min start for full background coverage
+            color=color,
+            alpha=0.2,  # High opacity
+            edgecolor='none')  # No border
+print(gate_colors)
 
 bars = plt.barh(y=GateAssigned,
-                width=DepT_min-ArrT_min,
-                left=ArrT_min,
-                color=colors)
+                width=(DepT_min-ArrT_min)/60,
+                left=(ArrT_min)/60,
+                color=colors,
+                alpha=1.0)
                 #edgecolor=background_colors)
 
-# gate colouring by size, comment next 7 lines out if you don't want that
-gate_coloring = True
-if gate_coloring == True:
-    for i, (color, gate) in enumerate(zip(gate_colors, G)):
-        plt.barh(y=gate,
-                width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
-                left=min(ArrT_min),  # Set to min start for full background coverage
-                color=gate_colors,
-                alpha=0.2,  # High opacity
-                edgecolor='none')  # No border
-print(gate_colors)
+
 for bar, label in zip(bars, F):
     plt.text(x=bar.get_x() + bar.get_width() / 2,  # x position
              y=bar.get_y() + bar.get_height() / 2,  # y position
@@ -216,6 +217,7 @@ for bar, label in zip(bars, F):
              va='center',  # vertical alignment
              color='white')  # text color
 
-
+if save == True:
+    plt.savefig('verification_scenario4')
 plt.show()
 
