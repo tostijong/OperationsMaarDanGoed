@@ -202,7 +202,7 @@ for la in L:
 #             (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
 #             for k in G.keys() 
 #             for i in F.keys())),'/',sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F.keys()]), '=' ,S)
-print(f'Q = {sum([y[i,k].X * (N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for i in F.keys() for k in G.keys()]) / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()])}')
+print(f'Q = {sum([y[i,k].X * (N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for i in F.keys() for k in G.keys() if k<x]) / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()])}')
 
 
 import matplotlib.pyplot as plt
