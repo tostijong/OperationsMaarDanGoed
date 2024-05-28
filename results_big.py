@@ -5,8 +5,10 @@ from gurobipy import Model,GRB,LinExpr,quicksum,max_
 ## Initiate Gurobi model
 m = Model()
 
-tab1 = pd.read_excel('Big_scenario.xlsx', sheet_name='Flights')
-tab2 = pd.read_excel('Big_scenario.xlsx', sheet_name='Gates')
+# tab1 = pd.read_excel('big2.xlsx', sheet_name='Flights')
+# tab2 = pd.read_excel('big2.xlsx', sheet_name='Gates')
+tab1 = pd.read_csv('tab1.csv', sep=';')
+tab2 = pd.read_csv('tab2.csv', sep=';')
 def convert_time_to_minutes(df):
     df_copy = df.copy()
     df_copy= df_copy.apply(lambda x: int(x.split(':')[0]) * 60 + int(x.split(':')[1]))
@@ -23,9 +25,9 @@ for i in c_fi: #erg gebeunde oplossing, maar vgm werkt t wel :) (zelfde geldt vo
         c_fi2.append(2)
     if i == 'L':
         c_fi2.append(3)
-print(c_fi2)
-print(c_fi2[0])
-print(c_fi)
+# print(c_fi2)
+# print(c_fi2[0])
+# print(c_fi)
 L = tab1['Airline'].drop_duplicates() #set of airlines
 F_L = {airline: tab1.loc[tab1['Airline'] == airline, 'Flight no.'] for airline in L}
 G = tab2['Gate no.']#Gate set
@@ -57,17 +59,18 @@ for type in k:
         x += 1
 
 # x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
-Z2 = 0.1 # maximum margin of difference per airline
+Z2 = 0.2 # maximum margin of difference per airline
 
 ## Decision variables
 y = {}
 z = {}
-
+notrandom = True
+balancing = True
 for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
-                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
+                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k] if notrandom else 0,
                                 # obj = 0,
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
@@ -119,7 +122,7 @@ C5 = m.addConstrs(((a_fi[j] - d_fi[i] + (1-z[i,j])*M >= T)
 C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
                    for i in F.keys()
                    for k in G.keys()), name='C6')
-balancing = False
+
 if balancing:
     # C3,4,5,6 - minimum difference per airline
     S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
@@ -180,7 +183,7 @@ m.update()
 m.optimize()
 # m.computeIIS()
 # m.write('m_test.ilp')
-m.write('operations.lp')
+m.write('results_big.lp')
 
 
 cutoff = 10E-6

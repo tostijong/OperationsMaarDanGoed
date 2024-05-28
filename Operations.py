@@ -66,7 +66,7 @@ for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
-                                # obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
+                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
     for j in F.keys():
@@ -75,7 +75,7 @@ for i in F.keys():
                                 name='z[%s,%s]'%(i,j))
 
 m.update()
-# m.setObjective(m.getObjective(), GRB.MINIMIZE)
+m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C7 - 80% aerobridge
@@ -170,7 +170,7 @@ C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la i
 
 Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
 Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
-m.setObjective(Z2, GRB.MINIMIZE)
+# m.setObjective(Z2, GRB.MINIMIZE)
 
 m.setParam('NonConvex', 2)
 m.update()
