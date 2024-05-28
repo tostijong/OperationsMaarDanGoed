@@ -4,6 +4,9 @@ from gurobipy import Model,GRB,LinExpr,quicksum,max_
 
 ## Initiate Gurobi model
 m = Model()
+
+# tab1 = pd.read_excel('big2.xlsx', sheet_name='Flights')
+# tab2 = pd.read_excel('big2.xlsx', sheet_name='Gates')
 tab1 = pd.read_csv('tab1.csv', sep=';')
 tab2 = pd.read_csv('tab2.csv', sep=';')
 def convert_time_to_minutes(df):
@@ -22,9 +25,9 @@ for i in c_fi: #erg gebeunde oplossing, maar vgm werkt t wel :) (zelfde geldt vo
         c_fi2.append(2)
     if i == 'L':
         c_fi2.append(3)
-print(c_fi2)
-print(c_fi2[0])
-print(c_fi)
+# print(c_fi2)
+# print(c_fi2[0])
+# print(c_fi)
 L = tab1['Airline'].drop_duplicates() #set of airlines
 F_L = {airline: tab1.loc[tab1['Airline'] == airline, 'Flight no.'] for airline in L}
 G = tab2['Gate no.']#Gate set
@@ -61,12 +64,14 @@ Z2 = 0.2 # maximum margin of difference per airline
 ## Decision variables
 y = {}
 z = {}
-
+notrandom = True
+balancing = True
 for i in F.keys():
     for k in G.keys():
         y[i,k] = m.addVar(lb=0, ub=1,
                                 vtype=GRB.BINARY,
-                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
+                                obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k] if notrandom else 0,
+                                # obj = 0,
                                 name='y[%s,%s]'%(i,k))
 for i in F.keys():
     for j in F.keys():
@@ -79,10 +84,10 @@ m.setObjective(m.getObjective(), GRB.MINIMIZE)
 
 ## Constraints
 #C7 - 80% aerobridge
-C1 = m.addConstr((((quicksum(y[i,k]*(N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) 
-                              for k in G.keys() if k<x 
+C1 = m.addConstr((((quicksum(y[i,k]*(N_a_fi[i] + N_d_fi[i] + N_m_fi[i])
+                              for k in G.keys() if k<x
                               for i in F.keys()))
-                              / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()])) 
+                              / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()]))
                               >= 0.8), name='C1')
 
 #C8 - each flight is assigned to exactly 1 gate
@@ -118,47 +123,48 @@ C6 = m.addConstrs((c_fi2[i] <= (c_g2[k] + (1-y[i,k])*M)
                    for i in F.keys()
                    for k in G.keys()), name='C6')
 
-# C3,4,5,6 - minimum difference per airline
-S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
-S_val = m.addConstr(S == quicksum((y[i,k]*
-            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
-            for k in G.keys() 
-            for i in F.keys())) / sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F.keys()]))
+if balancing:
+    # C3,4,5,6 - minimum difference per airline
+    S = m.addVar(vtype=GRB.CONTINUOUS,name='S')
+    S_val = m.addConstr(S == quicksum((y[i,k]*
+                (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k])
+                for k in G.keys()
+                for i in F.keys())) / sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F.keys()]))
 
-S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,name=f'S_la[{la}]') for la in L}
-S_la_val = {}
-for airline in L:
-    S_la_val[airline] = m.addConstr(S_la[airline] == quicksum(y[i,k]*
-                              (N_a_fi[i]*
-                               S_a_gk[k]+
-                               N_d_fi[i]*
-                               S_d_gk[k]+
-                               N_m_fi[i]*
-                               S_m_gk[k])
-                              for k in G.keys() for i in F_L[airline].keys())
-                     /sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F_L[airline].keys()]), name=f'S_la_val[{airline}]')
-
-
-# M = 1E6
-B = {la: m.addVar(lb=0, ub=1,
-                    vtype=GRB.BINARY,
-                    name=f'B[{la}]')
-                    for la in L}
-
-Z_S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,
-                            name=f'Z_S_la[{la}]')
-                            for la in L}
-
-C0_max1 = m.addConstrs((Z_S_la[la]*S >= (S_la[la] - S) for la in L),name='C0_max1')
-C0_max2 = m.addConstrs((Z_S_la[la]*S >= -1*(S_la[la] - S) for la in L),name='C0_max2')
-
-C0_min1 = m.addConstrs((Z_S_la[la]*S <= (S_la[la] - S) + M*B[la] for la in L),name='C0_min1')
-C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la in L),name='C0_min2')
+    S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,name=f'S_la[{la}]') for la in L}
+    S_la_val = {}
+    for airline in L:
+        S_la_val[airline] = m.addConstr(S_la[airline] == quicksum(y[i,k]*
+                                  (N_a_fi[i]*
+                                   S_a_gk[k]+
+                                   N_d_fi[i]*
+                                   S_d_gk[k]+
+                                   N_m_fi[i]*
+                                   S_m_gk[k])
+                                  for k in G.keys() for i in F_L[airline].keys())
+                         /sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F_L[airline].keys()]), name=f'S_la_val[{airline}]')
 
 
+    # M = 1E6
+    B = {la: m.addVar(lb=0, ub=1,
+                        vtype=GRB.BINARY,
+                        name=f'B[{la}]')
+                        for la in L}
 
-# C7 = m.addConstrs(((Z_S_la[la] <= Z2)
-#                   for la in L), name = 'C7')
+    Z_S_la = {la: m.addVar(vtype=GRB.CONTINUOUS,
+                                name=f'Z_S_la[{la}]')
+                                for la in L}
+
+    C0_max1 = m.addConstrs((Z_S_la[la]*S >= (S_la[la] - S) for la in L),name='C0_max1')
+    C0_max2 = m.addConstrs((Z_S_la[la]*S >= -1*(S_la[la] - S) for la in L),name='C0_max2')
+
+    C0_min1 = m.addConstrs((Z_S_la[la]*S <= (S_la[la] - S) + M*B[la] for la in L),name='C0_min1')
+    C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la in L),name='C0_min2')
+
+
+
+    C7 = m.addConstrs(((Z_S_la[la] <= Z2)
+                      for la in L), name = 'C7')
 
 
 # m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
@@ -168,8 +174,8 @@ C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la i
 
 
 
-Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
-Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
+# Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
+# Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
 # m.setObjective(Z2, GRB.MINIMIZE)
 
 m.setParam('NonConvex', 2)
@@ -177,7 +183,7 @@ m.update()
 m.optimize()
 # m.computeIIS()
 # m.write('m_test.ilp')
-m.write('operations.lp')
+m.write('results_big.lp')
 
 
 cutoff = 10E-6
@@ -187,9 +193,16 @@ for i in F.keys():
         if y[i,k].X > cutoff:
             print(f'Flight {F[i]} is assigned to gate {G[k]}')
             GateAssigned.append(k)
-print(f'S is equal to {S.X}')
-for la in L:
-    print(f'S_{la} is equal to {S_la[la].X}')
+
+print("--- Walking distance ---")
+print(quicksum((y[i,k].X*
+            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k])
+            for k in G.keys()
+            for i in F.keys())))
+if balancing:
+    print(f'S is equal to {S.X}')
+    for la in L:
+        print(f'S_{la} is equal to {S_la[la].X}')
 # print(sum([y[i,k].X*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
 #                         for k in G.keys()
 #                         for i in F.keys()]))
@@ -198,11 +211,11 @@ for la in L:
 #     print(la,': ',S_la[la])
 #     # print(f'{Z_S_la[la].X - np.abs(S_la[la].X - S.X)/S.X}')
 
-# print(quicksum((y[i,k].X*
-#             (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k]) 
-#             for k in G.keys() 
-#             for i in F.keys())),'/',sum([N_a_fi[i]+N_d_fi[i]+N_m_fi[i] for i in F.keys()]), '=' ,S)
-print(f'Q = {sum([y[i,k].X * (N_a_fi[i] + N_d_fi[i] + N_m_fi[i]) for i in F.keys() for k in G.keys() if k<x]) / sum([N_a_fi[i] + N_d_fi[i] + N_m_fi[i] for i in F.keys()])}')
+    print("--- Walking distance ---")
+    print(quicksum((y[i,k].X*
+            (N_a_fi[i]*S_a_gk[k]+N_d_fi[i]*S_d_gk[k]+N_m_fi[i]*S_m_gk[k])
+            for k in G.keys()
+            for i in F.keys())))
 
 
 import matplotlib.pyplot as plt
@@ -266,4 +279,5 @@ plt.xticks(Tticks,Tticks_str)
 plt.xlim((Tticks[0],Tticks[-1]))
 
 
-# plt.show()
+plt.show()
+
