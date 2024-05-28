@@ -19,6 +19,7 @@ def GateAssignment(
                     L = tab1['Airline'].drop_duplicates(), #set of airlines
                     F_L = {airline: tab1.loc[tab1['Airline'] == airline, 'Flight no.'] for airline in tab1['Airline'].drop_duplicates()},
                     G = tab2['Gate no.'], #Gate set
+                    G_Original = tab2['Gate no.'], #Gate set
                     c_g = tab2['Gate size'], #size of gate g_k
                     a_fi = convert_time_to_minutes(tab1['Arr. time']), # arrival time of flight f_i
                     d_fi = convert_time_to_minutes(tab1['Dep. time']), # departure time of flight f_i
@@ -69,7 +70,6 @@ def GateAssignment(
         for k in G.keys():
             y[i,k] = m.addVar(lb=0, ub=1,
                                     vtype=GRB.BINARY,
-                                    # obj = N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k],
                                     name='y[%s,%s]'%(i,k))
     for i in F.keys():
         for j in F.keys():
@@ -202,7 +202,7 @@ def GateAssignment(
         gate_colors = [gate_color_mapping[val] for val in c_g2]
 
         # gate colouring by size, change color=color to color='white' if you don't want it
-        for i, (color, gate) in enumerate(zip(gate_colors, G)):
+        for i, (color, gate) in enumerate(zip(gate_colors, G_Original)):
             plt.barh(y=gate,
                     #  width=max(DepT_min) - min(ArrT_min),  # Set to max width for full background coverage
                     #  left=min(ArrT_min),  # Set to min start for full background coverage
@@ -233,7 +233,7 @@ def GateAssignment(
 
 
 # =============================================================================================
-# Scenario 1: 20% of all gates become inoperable (randomly assigned)
+# Scenario 1: 20% of all gates become inoperable (randomly selected)
 # =============================================================================================
 np.random.seed(144)
 Frac_GateInoperable_S1 = 0.2
@@ -242,36 +242,83 @@ GateSet_S1 = tab2['Gate no.'] #Gate set
 GateSelection_S1 = GateSet_S1.drop(np.random.choice(len(GateSet_S1),
                         int(np.floor(len(GateSet_S1)*(Frac_GateInoperable_S1))),
                         replace=False))
-GateAssignment(
-                # G = GateSelection_S1,
-               Z2=0.2)
+# GateAssignment(G = GateSelection_S1)
+
 
 # =============================================================================================
 # Scenario 2: The walking distances of the remote gates get multiplied by a factor 4
 # =============================================================================================
-
+Multiplier_S2 = 4
+RemoteLoc_S2 = np.where(tab2['Contact gate or remote stand']=='R')[0]
+S_a_gk_S2 = tab2['Distance to the baggage hall (unit: m)'].to_numpy()
+S_d_gk_S2 = tab2['Distance to the security check points (unit: m)'].to_numpy()
+S_m_gk_S2 = tab2['Distance to the transit counter (unit: m)'].to_numpy()
+S_a_gk_S2[RemoteLoc_S2]*=Multiplier_S2
+S_d_gk_S2[RemoteLoc_S2]*=Multiplier_S2
+S_m_gk_S2[RemoteLoc_S2]*=Multiplier_S2
+# GateAssignment(S_a_gk=S_a_gk_S2,
+#                S_d_gk=S_d_gk_S2,
+#                S_m_gk=S_m_gk_S2,
+#                Z2=0.1)
 
 
 # =============================================================================================
 # Scenario 3: The safety interval increases to twice its current value (from 15 min to 30 min)
 # =============================================================================================
-
+T_S2 = 30
+# GateAssignment(T=T_S2,
+#                Z2=0.1)
 
 
 # =============================================================================================
 # Scenario 4: All small flights are delayed by one (1) hour
 # =============================================================================================
-
+c_fi_S4 = np.array(tab1['Type']), #size of aircraft which executes flight f_i
+a_fi_S4 = np.array(convert_time_to_minutes(tab1['Arr. time'])), # arrival time of flight f_i
+d_fi_S4 = np.array(convert_time_to_minutes(tab1['Dep. time'])), # departure time of flight f_i
+for i in range(len(c_fi_S4[0])):
+    if c_fi_S4[0][i] == 'S':
+        a_fi_S4[0][i] += 60
+        d_fi_S4[0][i] += 60
+# GateAssignment(
+            #    a_fi=a_fi_S4[0],
+            #    d_fi=d_fi_S4[0])
 
 
 # =============================================================================================
 # Scenario 5: All large flights have twice the current amount of passengers 
-# (ratio dep. passengers and transfer passengers remains constant)
+# (ratio arr., dep. and transfer passengers remains constant)
 # =============================================================================================
-
+c_fi_S5 = np.array(tab1['Type']), #size of aircraft which executes flight f_i
+N_a_fi_S5 = np.array(tab1['Number of arr. passengers']) #number of arrival passengers of flight f_i
+N_d_fi_S5 = np.array(tab1['Number of dep. passengers']) #number of departure passengers of flight f_i
+N_m_fi_S5 = np.array(tab1['Number of transit passengers']) #number of transit passengers of flight f_i
+for i in range(len(c_fi_S5[0])):
+    if c_fi_S4[0][i] == 'L':
+        N_a_fi_S5[i] *= 2
+        N_d_fi_S5[i] *= 2
+        N_m_fi_S5[i] *= 2
+# GateAssignment(N_a_fi=N_a_fi_S5,
+#                N_d_fi=N_d_fi_S5,
+#                N_m_fi=N_m_fi_S5,
+#                )
 
 
 # =============================================================================================
 # Scenario 6: Flights from airline 2 have twice the current amount of passengers 
-# (ratio dep. passengers and transfer passengers remains constant)
+# (ratio arr., dep. and transfer passengers remains constant)
 # =============================================================================================
+L = np.array(tab1['Airline'])
+N_a_fi_S6 = np.array(tab1['Number of arr. passengers']) #number of arrival passengers of flight f_i
+N_d_fi_S6 = np.array(tab1['Number of dep. passengers']) #number of departure passengers of flight f_i
+N_m_fi_S6 = np.array(tab1['Number of transit passengers']) #number of transit passengers of flight f_i
+for i in range(len(L)):
+    k = L[i]
+    if L[i] == 'A2':
+        N_a_fi_S6[i] *= 2
+        N_d_fi_S6[i] *= 2
+        N_m_fi_S6[i] *= 2
+GateAssignment(N_a_fi=N_a_fi_S6,
+               N_d_fi=N_d_fi_S6,
+               N_m_fi=N_m_fi_S6
+               )
