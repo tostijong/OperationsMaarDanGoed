@@ -56,7 +56,7 @@ for type in k:
         x += 1
 
 # x = 8 # number of contact gates #TODO: nu gehardcode, veranderen als we dat willen
-Z2 = 0.2 # maximum margin of difference per airline
+Z2 = 0.1 # maximum margin of difference per airline
 
 ## Decision variables
 y = {}
@@ -157,19 +157,19 @@ C0_min1 = m.addConstrs((Z_S_la[la]*S <= -1*(S_la[la] - S) + M*(1-B[la]) for la i
 
 
 
-# C7 = m.addConstrs(((Z_S_la[la] <= Z2)
-#                   for la in L), name = 'C7')
+C7 = m.addConstrs(((Z_S_la[la] <= Z2)
+                  for la in L), name = 'C7')
 
 
-# m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
-#                         for k in G.keys()
-#                         for i in F.keys()), GRB.MINIMIZE)
+m.setObjective(quicksum(y[i,k]*(N_a_fi[i]*S_a_gk[k] + N_d_fi[i]*S_d_gk[k] + N_m_fi[i]*S_m_gk[k])
+                        for k in G.keys()
+                        for i in F.keys()), GRB.MINIMIZE)
 
 
 
 
-Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
-Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
+# Z2 = m.addVar(vtype=GRB.CONTINUOUS,name='Z2')
+# Z2_val = m.addConstr(Z2 == max_([Z_S_la[la] for la in L]))
 # m.setObjective(Z2, GRB.MINIMIZE)
 
 m.setParam('NonConvex', 2)
@@ -266,4 +266,4 @@ plt.xticks(Tticks,Tticks_str)
 plt.xlim((Tticks[0],Tticks[-1]))
 
 
-# plt.show()
+plt.show()

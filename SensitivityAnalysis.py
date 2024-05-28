@@ -239,12 +239,12 @@ np.random.seed(144)
 Frac_GateInoperable_S1 = 0.2
 # Select the gates that become inoperable
 GateSet_S1 = tab2['Gate no.'] #Gate set
-# GateSelection_S1 = GateSet_S1[np.random.choice(len(GateSet_S1),
-                                            #    np.ceil(len(GateSet_S1)*(1-Frac_GateInoperable_S1)),
-                                            #    replace=False)]
-print(np.random.choice(len(GateSet_S1),
-                        int(np.floor(len(GateSet_S1)*(1-Frac_GateInoperable_S1))),
+GateSelection_S1 = GateSet_S1.drop(np.random.choice(len(GateSet_S1),
+                        int(np.floor(len(GateSet_S1)*(Frac_GateInoperable_S1))),
                         replace=False))
+GateAssignment(
+                # G = GateSelection_S1,
+               Z2=0.2)
 
 # =============================================================================================
 # Scenario 2: The walking distances of the remote gates get multiplied by a factor 4
