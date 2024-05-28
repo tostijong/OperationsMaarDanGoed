@@ -5,8 +5,10 @@ from gurobipy import Model,GRB,LinExpr,quicksum,max_
 import matplotlib.pyplot as plt
 
 
-tab1 = pd.read_csv('tab1.csv', sep=';')
-tab2 = pd.read_csv('tab2.csv', sep=';')
+# tab1 = pd.read_csv('tab1.csv', sep=';')
+# tab2 = pd.read_csv('tab2.csv', sep=';')
+tab1 = pd.read_excel('big2.xlsx', sheet_name='Flights')
+tab2 = pd.read_excel('big2.xlsx', sheet_name='Gates')
 def convert_time_to_minutes(df):
     df_copy = df.copy()
     df_copy= df_copy.apply(lambda x: int(x.split(':')[0]) * 60 + int(x.split(':')[1]))
@@ -35,7 +37,7 @@ def GateAssignment(
                     WRITE=False,
                     PLOT=True,
                     M=300,
-                    xticks_stepsize = 30 #min
+                    xticks_stepsize = 60 #min
                     ):
     # Initiate model
     m = Model()
@@ -228,6 +230,7 @@ def GateAssignment(
 
         plt.xticks(Tticks,Tticks_str)
         plt.xlim((Tticks[0],Tticks[-1]))
+        plt.tight_layout()
         plt.show()
 
 
